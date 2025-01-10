@@ -9,8 +9,7 @@ pip install -r requirements.txt
 ```
 
 ## Usage
-1. **Ensure `input.csv` exists and is properly formatted.**
-2. **Run the pipeline:**
+
 ```python
 config = PipelineConfig(
     input_path=INPUT_PATH,
@@ -20,7 +19,7 @@ config = PipelineConfig(
     batch_size=BATH_NUMBER,
     required_columns=[REQUIRED_COLUMNS],
     column_mappings={
-        // Column renaming, key : value
+        // columns renaming, key : value
     },
     filter_conditions={
         // filter conditions, key : value
