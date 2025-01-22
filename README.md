@@ -1,6 +1,6 @@
 # Functional Data Processing Pipeline
 
-This project is a data processing pipeline written in Python that reads data from a CSV file, transforms it, and writes the results to various formats(CSV|JSON|PARQUET|EXCEL) files. 
+This project is a data processing pipeline written in Python that reads data from a file(CSV|JSON|PARQUET|EXCEL), transforms it, and writes the results to various formats(CSV|JSON|PARQUET|EXCEL) files. 
 
 
 ## Install
@@ -8,27 +8,10 @@ This project is a data processing pipeline written in Python that reads data fro
 pip install -r requirements.txt
 ```
 
-## Usage
-
-```python
-config = PipelineConfig(
-    input_path=INPUT_PATH,
-    output_path=OUTPUT_PATH,
-    input_format=INPUT_FILE_FORMAT,
-    output_format=OUTPUT_FILE_FORMAT,
-    batch_size=BATH_NUMBER,
-    required_columns=[REQUIRED_COLUMNS],
-    column_mappings={
-        // columns renaming, key : value
-    },
-    filter_conditions={
-        // filter conditions, key : value
-    }
-)
-```
+## Run
 
 ```bash
-python main.py
+python app.py
 ```
 
 **Run the tests:**

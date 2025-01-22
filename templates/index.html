@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Data Pipeline Processor</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#4F46E5',
+                        secondary: '#818CF8',
+                        accent: '#C7D2FE'
+                    },
+                    animation: {
+                        'bounce-slow': 'bounce 3s linear infinite',
+                    }
+                }
+            }
+        }
+    </script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/ace/1.4.12/ace.js"></script>
+</head>
+
+<body class="bg-gradient-to-br from-purple-50 to-gray-200 min-h-screen py-12">
+    <nav class="">
+        <div class="container mx-auto px-2 flex items-center justify-end">
+            <a href="https://github.com/iv4n-ga6l" target="_blank" class="bg-primary text-white py-2 px-4 rounded-lg hover:bg-secondary transition-colors">
+                <i class="fa-brands fa-github"></i>
+            </a>
+        </div>
+    </nav>
+    <div class="container mx-auto px-4 max-w-4xl">
+        <!-- Header Section -->
+        <div class="text-center mb-12">
+            <h1 class="text-4xl font-bold text-primary mb-3 flex items-center justify-center gap-3">
+                <i class="fas fa-database"></i>
+                Data Pipeline Processor
+            </h1>
+            <p class="text-gray-600">Transform and process your data efficiently</p>
+        </div>
+
+        <form id="pipelineForm" class="bg-white shadow-xl rounded-2xl p-8 space-y-8 border border-gray-100">
+            <!-- File Upload Section -->
+            <div
+                class="bg-gray-50 p-6 rounded-xl border border-dashed border-gray-300 hover:border-primary transition-colors">
+                <label class="block text-gray-700 font-semibold mb-3 flex items-center gap-2">
+                    <i class="fas fa-file-upload text-primary"></i>
+                    Input File
+                </label>
+                <input type="file" name="file" required
+                    class="w-full px-4 py-3 bg-white border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-primary file:text-white hover:file:bg-secondary">
+            </div>
+
+            <!-- Format Selection -->
+            <div class="grid md:grid-cols-2 gap-6">
+                <div>
+                    <label class="block text-gray-700 font-semibold mb-3 flex items-center gap-2">
+                        <i class="fas fa-file-import text-primary"></i>
+                        Input Format
+                    </label>
+                    <select name="input_format" required
+                        class="w-full px-4 py-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary">
+                        {% for format in file_formats %}
+                        <option value="{{ format }}">{{ format }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-gray-700 font-semibold mb-3 flex items-center gap-2">
+                        <i class="fas fa-file-export text-primary"></i>
+                        Output Format
+                    </label>
+                    <select name="output_format" required
+                        class="w-full px-4 py-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary">
+                        {% for format in file_formats %}
+                        <option value="{{ format }}">{{ format }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+            </div>
+
+            <!-- Processing Options -->
+            <div class="space-y-6">
+                <div>
+                    <label class="block text-gray-700 font-semibold mb-3 flex items-center gap-2">
+                        <i class="fas fa-layer-group text-primary"></i>
+                        Batch Size
+                    </label>
+                    <input type="number" name="batch_size" value="1000" min="1"
+                        class="w-full px-4 py-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary">
+                </div>
+
+                <div>
+                    <label class="block text-gray-700 font-semibold mb-3 flex items-center gap-2">
+                        <i class="fas fa-columns text-primary"></i>
+                        Required Columns
+                    </label>
+                    <input type="text" name="required_columns" placeholder="column1,column2,column3"
+                        class="w-full px-4 py-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary">
+                    <p class="text-sm text-gray-500 mt-2"><i class="fas fa-info-circle"></i> Separate column names with
+                        commas</p>
+                </div>
+
+                <div>
+                    <label class="block text-gray-700 font-semibold mb-3 flex items-center gap-2">
+                        <i class="fas fa-exchange-alt text-primary"></i>
+                        Column Mappings
+                    </label>
+                    <div id="column_mappingsJsonEditor" class="w-full h-32">
+                        <textarea name="column_mappings" rows="3" placeholder='{"old_name": "new_name"}'
+                            class="w-full px-4 py-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary font-mono text-sm"></textarea>
+                    </div>
+                </div>
+
+                <div>
+                    <label class="block text-gray-700 font-semibold mb-3 flex items-center gap-2">
+                        <i class="fas fa-filter text-primary"></i>
+                        Filter Conditions
+                    </label>
+                    <div id="filter_conditionsJsonEditor" class="w-full h-32">
+                        <textarea name="filter_conditions" rows="3" placeholder='{"column": "value"}'
+                            class="w-full px-4 py-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary font-mono text-sm"></textarea>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Submit Button -->
+            <div class="pt-4">
+                <button type="submit"
+                    class="w-full bg-primary text-white py-4 px-6 rounded-xl hover:bg-secondary transition-colors duration-300 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary flex items-center justify-center gap-2 font-semibold">
+                    <i class="fas fa-cogs"></i>
+                    Process Data
+                </button>
+            </div>
+        </form>
+
+        <!-- Processing Status -->
+        <div id="status" class="mt-8 text-center hidden">
+            <div class="flex flex-col items-center space-y-4 bg-white p-6 rounded-xl shadow-lg">
+                <div class="animate-spin rounded-full h-12 w-12 border-4 border-primary border-t-transparent"></div>
+                <p class="text-gray-700 font-medium">Processing your data...</p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+
+        let columnMappingsJsonEditor, filterConditionsJsonEditor;
+
+        document.addEventListener('DOMContentLoaded', function () {
+            columnMappingsJsonEditor = ace.edit("column_mappingsJsonEditor");
+            columnMappingsJsonEditor.setTheme("ace/theme/monokai");
+            columnMappingsJsonEditor.session.setMode("ace/mode/json");
+
+            filterConditionsJsonEditor = ace.edit("filter_conditionsJsonEditor");
+            filterConditionsJsonEditor.setTheme("ace/theme/monokai");
+            filterConditionsJsonEditor.session.setMode("ace/mode/json");
+        });
+
+        function formatJSON(editor) {
+            try {
+                const content = editor.getValue();
+                const formatted = JSON.stringify(JSON.parse(content), null, 2);
+                editor.setValue(formatted);
+                editor.clearSelection();
+            } catch (e) {
+                alert('Invalid JSON format');
+            }
+        }
+
+
+        document.addEventListener('keydown', function (e) {
+            // Ctrl/Cmd + Shift + F to format JSON
+            if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key.toLowerCase() === 'f') {
+                e.preventDefault();
+                const activeElement = document.activeElement;
+                if (columnMappingsJsonEditor.isFocused()) {
+                    formatJSON(columnMappingsJsonEditor);
+                } else if (filterConditionsJsonEditor.isFocused()) {
+                    formatJSON(filterConditionsJsonEditor);
+                }
+            }
+        });
+
+
+        document.getElementById('pipelineForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const form = e.target;
+            const formData = new FormData(form);
+            formData.set('column_mappings', columnMappingsJsonEditor.getValue());
+            formData.set('filter_conditions', filterConditionsJsonEditor.getValue());
+            const status = document.getElementById('status');
+            const submitButton = form.querySelector('button[type="submit"]');
+
+            try {
+                status.classList.remove('hidden');
+                submitButton.disabled = true;
+                submitButton.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Processing...';
+
+                const response = await fetch('/process', {
+                    method: 'POST',
+                    body: formData
+                });
+
+                if (!response.ok) {
+                    const error = await response.json();
+                    throw new Error(error.error || 'Processing failed');
+                }
+
+                // Handle file download
+                const blob = await response.blob();
+                const url = window.URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = response.headers.get('content-disposition').split('filename=')[1];
+                document.body.appendChild(a);
+                a.click();
+                window.URL.revokeObjectURL(url);
+                a.remove();
+
+            } catch (error) {
+                const errorDiv = document.createElement('div');
+                errorDiv.className = 'fixed top-4 right-4 bg-red-100 border-l-4 border-red-500 text-red-700 p-4 rounded shadow-lg';
+                errorDiv.innerHTML = `<i class="fas fa-exclamation-circle"></i> ${error.message}`;
+                document.body.appendChild(errorDiv);
+                setTimeout(() => errorDiv.remove(), 5000);
+            } finally {
+                status.classList.add('hidden');
+                submitButton.disabled = false;
+                submitButton.innerHTML = '<i class="fas fa-cogs"></i> Process Data';
+            }
+        });
+    </script>
+</body>
+
+</html>
