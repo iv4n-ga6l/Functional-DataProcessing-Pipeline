@@ -21,3 +21,21 @@ class PipelineConfig:
     filter_conditions: Optional[Dict[str, Any]] = None
     log_level: str = "INFO"
     log_file: Optional[str] = "pipeline.log"
+
+
+class Config:
+    DEBUG = False
+    TESTING = False
+    SECRET_KEY = 'secret-key'
+    ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg'}
+
+class DevelopmentConfig(Config):
+    DEBUG = False
+
+class TestingConfig(Config):
+    TESTING = True
+
+config = {
+    'development': DevelopmentConfig,
+    'testing': TestingConfig
+}

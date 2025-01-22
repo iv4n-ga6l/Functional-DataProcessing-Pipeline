@@ -1,13 +1,15 @@
 from flask import Flask, render_template, request, jsonify, send_file
 import os
 from werkzeug.utils import secure_filename
-from config import FileFormat, PipelineConfig
+from config import FileFormat, PipelineConfig, config
 from pipeline import DataPipeline
 import json
+from waitress import serve
 from pycache_handler.handler import py_cache_handler
 
 
 app = Flask(__name__)
+app.config.from_object(config[os.getenv('FLASK_ENV', 'development')])
 app.config['UPLOAD_FOLDER'] = 'uploads'
 app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024  # 16MB max file size
 
@@ -80,7 +82,10 @@ def process_data():
 
 @py_cache_handler
 def main():
-    app.run(debug=True)
+    if app.config['DEBUG']:
+        app.run(host='0.0.0.0', port=5000, debug=True)
+    else:
+        serve(app, host='0.0.0.0', port=5000)
 
 if __name__ == '__main__':
     main()
