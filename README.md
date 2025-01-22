@@ -2,7 +2,7 @@
 
 This project is a data processing pipeline written in Python that reads data from a file(CSV|JSON|PARQUET|EXCEL), transforms it, and writes the results to various formats(CSV|JSON|PARQUET|EXCEL) files. 
 
-![app](https://i.ibb.co/GPgqqvD/dataprocessing.png)
+![app](dataprocessing.png)
 
 
 ## Install
