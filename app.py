@@ -53,7 +53,7 @@ def process_data():
         filter_conditions = json.loads(request.form.get('filter_conditions', '{}')) if request.form.get('filter_conditions') else {}
         
         # Create output filename
-        output_filename = f"processed_data.{output_format.lower()}"
+        output_filename = f"processed_data.{output_format.lower()}" if output_format != "excel" else "processed_data.xlsx"
         output_path = os.path.join(app.config['UPLOAD_FOLDER'], output_filename)
 
         # Configure and run pipeline
