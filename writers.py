@@ -43,6 +43,7 @@ def write_excel(data: List[Dict], output_path: str):
     """Write data to Excel file"""
     try:
         df = pd.DataFrame(data)
-        df.to_excel(output_path, index=False)
+        with pd.ExcelWriter(output_path) as writer:
+            df.to_excel(writer, index=False)
     except Exception as e:
         raise IOError(f"Error writing Excel file: {str(e)}")
