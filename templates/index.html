@@ -191,12 +191,14 @@
 
         document.addEventListener('DOMContentLoaded', function () {
             columnMappingsJsonEditor = ace.edit("column_mappingsJsonEditor");
-            columnMappingsJsonEditor.setTheme("ace/theme/monokai");
+            columnMappingsJsonEditor.setTheme("ace/theme/twilight");
             columnMappingsJsonEditor.session.setMode("ace/mode/json");
+            columnMappingsJsonEditor.setValue('{}');
 
             filterConditionsJsonEditor = ace.edit("filter_conditionsJsonEditor");
-            filterConditionsJsonEditor.setTheme("ace/theme/monokai");
+            filterConditionsJsonEditor.setTheme("ace/theme/twilight");
             filterConditionsJsonEditor.session.setMode("ace/mode/json");
+            filterConditionsJsonEditor.setValue('{}');
         });
 
         function formatJSON(editor) {
