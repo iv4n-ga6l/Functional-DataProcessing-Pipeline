@@ -21,6 +21,48 @@ ALLOWED_EXTENSIONS = {'csv', 'json', 'xlsx', 'parquet'}
 def allowed_file(filename):
     return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
 
+
+def parse_and_validate_json_object(field_name: str, raw_value: str) -> dict:
+    """Parse a JSON string and validate it is a non-null object (dict).
+
+    Args:
+        field_name: Human-readable name used in error messages.
+        raw_value: Raw JSON string from the request form.
+
+    Returns:
+        The parsed dict.
+
+    Raises:
+        ValueError: If the value is not valid JSON or not a JSON object.
+    """
+    try:
+        parsed = json.loads(raw_value)
+    except json.JSONDecodeError as exc:
+        raise ValueError(f"'{field_name}' contains invalid JSON: {exc.msg}") from exc
+
+    if not isinstance(parsed, dict):
+        raise ValueError(
+            f"'{field_name}' must be a JSON object (got {type(parsed).__name__})"
+        )
+    return parsed
+
+
+def validate_column_mappings(mappings: dict) -> None:
+    """Validate that column_mappings contains only string values.
+
+    JSON object keys are always strings when parsed by json.loads(), so only
+    the values need to be checked.
+
+    Raises:
+        ValueError: If any value is not a string.
+    """
+    for key, value in mappings.items():
+        if not isinstance(value, str):
+            raise ValueError(
+                f"'column_mappings' values must be strings (got {type(value).__name__} for key '{key}')"
+            )
+
+
 @app.route('/')
 def index():
     return render_template('index.html', file_formats=[format.value for format in FileFormat])
@@ -44,14 +86,50 @@ def process_data():
         input_path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
         file.save(input_path)
 
-        # Get form data
+        # Get and validate form data
         input_format = request.form.get('input_format')
         output_format = request.form.get('output_format')
-        batch_size = int(request.form.get('batch_size', 1000))
+
+        if not input_format:
+            return jsonify({'error': 'input_format is required'}), 400
+        if not output_format:
+            return jsonify({'error': 'output_format is required'}), 400
+
+        valid_formats = {f.value for f in FileFormat}
+        if input_format not in valid_formats:
+            return jsonify({'error': f"Invalid input_format '{input_format}'. Must be one of: {sorted(valid_formats)}"}), 400
+        if output_format not in valid_formats:
+            return jsonify({'error': f"Invalid output_format '{output_format}'. Must be one of: {sorted(valid_formats)}"}), 400
+
+        raw_batch_size = request.form.get('batch_size', '1000')
+        try:
+            batch_size = int(raw_batch_size)
+            if batch_size < 1:
+                raise ValueError
+        except (ValueError, TypeError):
+            return jsonify({'error': 'batch_size must be a positive integer'}), 400
+
         required_columns = request.form.get('required_columns', '').split(',') if request.form.get('required_columns') else []
-        column_mappings = json.loads(request.form.get('column_mappings', '{}')) if request.form.get('column_mappings') else {}
-        filter_conditions = json.loads(request.form.get('filter_conditions', '{}')) if request.form.get('filter_conditions') else {}
-        
+
+        raw_column_mappings = request.form.get('column_mappings', '').strip()
+        if raw_column_mappings:
+            try:
+                column_mappings = parse_and_validate_json_object('column_mappings', raw_column_mappings)
+                validate_column_mappings(column_mappings)
+            except ValueError as exc:
+                return jsonify({'error': exc.args[0]}), 400
+        else:
+            column_mappings = {}
+
+        raw_filter_conditions = request.form.get('filter_conditions', '').strip()
+        if raw_filter_conditions:
+            try:
+                filter_conditions = parse_and_validate_json_object('filter_conditions', raw_filter_conditions)
+            except ValueError as exc:
+                return jsonify({'error': exc.args[0]}), 400
+        else:
+            filter_conditions = {}
+
         # Create output filename
         output_filename = f"processed_data.{output_format.lower()}" if output_format != "excel" else "processed_data.xlsx"
         output_path = os.path.join(app.config['UPLOAD_FOLDER'], output_filename)
